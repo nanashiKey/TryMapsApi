@@ -1,6 +1,8 @@
 package irfan.sampling.trymapsapi
 
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import android.location.Location
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
@@ -10,6 +12,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
@@ -26,6 +29,8 @@ GoogleMap.OnMarkerClickListener{
     private lateinit var map: GoogleMap
 
     private lateinit var fusedLocationClient : FusedLocationProviderClient
+
+    private lateinit var lastLocation : Location
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,15 +56,18 @@ GoogleMap.OnMarkerClickListener{
         map = googleMap
 
         // Add a marker in Sydney and move the camera
-        val nustek = LatLng(-6.1646455, 106.7646498)
-        map.addMarker(MarkerOptions().position(nustek).title("Nusa teknologi"))
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(nustek, 18.00f))
+//        val nustek = LatLng(-6.1646455, 106.7646498)
+//        map.addMarker(MarkerOptions().position(nustek).title("Nusa teknologi"))
+//        map.moveCamera(CameraUpdateFactory.newLatLngZoom(nustek, 18.00f))
 
         map.uiSettings.isZoomControlsEnabled = true
         map.setOnMarkerClickListener(this)
 
         //apply set permission
         setUPMap()
+
+
+
     }
 
     //create method
@@ -71,6 +79,29 @@ GoogleMap.OnMarkerClickListener{
                 LOCATION_PERMISSION_REQUEST_CODE)
             return
         }
+
+        map.isMyLocationEnabled = true
+
+        fusedLocationClient.lastLocation.addOnSuccessListener(this){
+            location ->
+                if(location != null){
+                    lastLocation = location
+                    val currentLatLng = LatLng(location.latitude, location.longitude)
+                    placeMarkerOnMap(currentLatLng)
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18.0f))
+                }
+        }
+
+        map.mapType = GoogleMap.MAP_TYPE_SATELLITE
+    }
+
+    // create placeholder for marker
+    private fun placeMarkerOnMap(location : LatLng){
+        val markerOptions = MarkerOptions().position(location)
+        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(
+            BitmapFactory.decodeResource(resources, R.mipmap.ic_narto)
+        ))
+        map.addMarker(markerOptions)
     }
 
 }
